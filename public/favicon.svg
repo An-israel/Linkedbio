@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#060607"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" fill="none" stroke="#1C1E22"/>
+  <text x="32" y="43" text-anchor="middle" font-family="'Inter Tight','Inter',system-ui,sans-serif" font-weight="600" font-size="28" letter-spacing="-1" fill="#EDEFF2">AI</text>
+</svg>

@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+  /* Obsidian & Sterling palette */
+  --color-obsidian: #060607;
+  --color-graphite: #101114;
+  --color-steel: #1C1E22;
+  --color-silver: #C7CBD1;
+  --color-platinum: #EDEFF2;
+  --color-white: #FFFFFF;
+  --color-mist: #8A8F98;
+
+  /* Admin functional colors */
+  --color-success: #3DDC97;
+  --color-warning: #F5B84C;
+  --color-danger: #F0564A;
+
+  /* Typography */
+  --font-display: "Inter Tight", "Neue Haas Grotesk Display", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background-color: var(--color-obsidian);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-obsidian);
+  color: var(--color-platinum);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mono label layer — part of the identity */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-silver);
+}
+
+/* Display face */
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* Visible silver focus ring for keyboard users */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-silver);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skeleton shimmer (graphite) */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-graphite);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(199, 203, 209, 0.06),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Modal entrance: quick fade + 8px rise */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.modal-card {
+  animation: modal-in 180ms ease-out both;
+}
+.modal-backdrop {
+  animation: backdrop-in 150ms ease-out both;
+}
+
+/* Featured link: faint silver gradient hairline border */
+.featured-ring {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--color-graphite), var(--color-graphite)) padding-box,
+    linear-gradient(
+        135deg,
+        rgba(199, 203, 209, 0.55),
+        rgba(199, 203, 209, 0.12) 45%,
+        rgba(199, 203, 209, 0.5)
+      )
+      border-box;
+}
+
+/* Toast slide-up */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.toast-in {
+  animation: toast-in 160ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+  .modal-card,
+  .modal-backdrop,
+  .toast-in {
+    animation-duration: 1ms;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
