@@ -170,10 +170,18 @@ export function PromoSlideshow({
 const POPUP_DELAY_MS = 12_000
 let popupShownThisSession = false
 
+function readPopupState(key: string): { last: number; visits: number } | null {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as { last: number; visits: number }) : null
+  } catch {
+    return null
+  }
+}
+
 function shouldShow(popup: PromoPopup): boolean {
   const key = `lynkit_popup_${popup.id}`
-  const raw = localStorage.getItem(key)
-  const state = raw ? (JSON.parse(raw) as { last: number; visits: number }) : null
+  const state = readPopupState(key)
   switch (popup.frequency) {
     case 'once_session':
       return sessionStorage.getItem(key) !== '1'
@@ -190,8 +198,7 @@ function shouldShow(popup: PromoPopup): boolean {
 function markShown(popup: PromoPopup) {
   const key = `lynkit_popup_${popup.id}`
   sessionStorage.setItem(key, '1')
-  const raw = localStorage.getItem(key)
-  const state = raw ? (JSON.parse(raw) as { last: number; visits: number }) : { last: 0, visits: 0 }
+  const state = readPopupState(key) ?? { last: 0, visits: 0 }
   localStorage.setItem(key, JSON.stringify({ ...state, last: Date.now() }))
 }
 

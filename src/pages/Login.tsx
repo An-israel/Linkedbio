@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { FieldLabel, btnPrimary, inputClass } from '../admin/ui'
 
 export function Login() {
   const navigate = useNavigate()
+  const { session, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  if (!loading && session) return <Navigate to="/dashboard" replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()

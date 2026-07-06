@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { signOut, useAuth } from '../hooks/useAuth'
 import { PromoBannerSlot, PromoPopupHost } from '../components/promos'
 import { ArrowUpRightIcon } from '../components/icons'
@@ -12,8 +14,25 @@ const NAV = [
 
 /** Auth-gated shell for the user's own control panel. */
 export function DashboardLayout() {
-  const { session, profile, loading } = useAuth()
+  const { session, profile, loading, refreshProfile } = useAuth()
   const navigate = useNavigate()
+  const healed = useRef(false)
+
+  // Self-heal: an authenticated user without a profile row (created while
+  // signup was broken) gets one from their signup metadata / email.
+  useEffect(() => {
+    if (loading || !session || profile || healed.current || !supabase) return
+    healed.current = true
+    const meta = session.user.user_metadata as { username?: string }
+    const base = (meta.username ?? session.user.email?.split('@')[0] ?? 'user')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '')
+    const username = base.length >= 3 ? base : `user-${session.user.id.slice(0, 6)}`
+    void supabase
+      .from('profiles')
+      .insert({ id: session.user.id, username, display_name: username })
+      .then(() => void refreshProfile())
+  }, [loading, session, profile, refreshProfile])
 
   if (loading) {
     return (

@@ -58,6 +58,9 @@ React Router, Supabase (Postgres + RLS, Auth, Storage), dnd-kit.
    - `supabase/migrations/0001_init.sql` (original single-tenant schema)
    - `supabase/migrations/0002_lynkit.sql` (multi-tenant pivot: profiles,
      themes, promos, reports, RLS, RPCs, buckets — migrates existing owner data)
+   - `supabase/migrations/0003_fix_signup.sql` (profile creation via
+     auth trigger — required for signup to work with email confirmation —
+     plus counter-RPC fixes and a profile backfill)
 3. Sign up through the app, then make yourself the owner:
    ```sql
    update public.profiles set is_owner = true where username = 'your-username';

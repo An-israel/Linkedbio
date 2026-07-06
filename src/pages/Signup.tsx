@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { validateUsername } from '../lib/validation'
-import { DEFAULT_THEME_ID } from '../lib/themes'
 import { FieldLabel, btnPrimary, inputClass } from '../admin/ui'
 
 type Availability = 'idle' | 'checking' | 'available' | 'taken'
@@ -17,6 +16,7 @@ export function Signup() {
   const [usernameError, setUsernameError] = useState<string | null>(null)
   const [availability, setAvailability] = useState<Availability>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [confirmSent, setConfirmSent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -78,29 +78,50 @@ export function Signup() {
       return
     }
 
-    const { data: auth, error: signUpError } = await supabase.auth.signUp({ email, password })
-    if (signUpError || !auth.user) {
-      setError(signUpError?.message ?? 'Sign up failed.')
-      setSubmitting(false)
-      return
-    }
-
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: auth.user.id,
-      username: clean,
-      display_name: clean,
-      theme_id: DEFAULT_THEME_ID,
+    // The profile row is created server-side by an auth trigger reading
+    // this username from the signup metadata — the client never inserts it,
+    // so email-confirmation flows (no session yet) work too.
+    const { data: auth, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username: clean },
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     })
     setSubmitting(false)
-    if (profileError) {
-      setError(
-        profileError.message.includes('duplicate')
-          ? 'That username was just taken — pick another.'
-          : profileError.message
-      )
+    if (signUpError || !auth.user) {
+      setError(signUpError?.message ?? 'Sign up failed.')
+      return
+    }
+    if (!auth.session) {
+      // Email confirmation is on: no session until they click the link.
+      setConfirmSent(true)
       return
     }
     navigate('/dashboard', { replace: true })
+  }
+
+  if (confirmSent) {
+    return (
+      <div className="min-h-dvh bg-obsidian flex items-center justify-center px-5">
+        <div className="w-full max-w-[400px] bg-graphite border border-steel rounded-[14px] p-7 text-center">
+          <p className="mono-label">One more step</p>
+          <h1 className="display text-platinum text-xl mt-2">Confirm your email</h1>
+          <p className="text-mist text-sm mt-3 leading-relaxed">
+            We sent a confirmation link to <span className="text-platinum">{email}</span>.
+            Click it, then log in — <span className="text-platinum">lynkit.link/{clean}</span>{' '}
+            is reserved for you.
+          </p>
+          <RouterLink
+            to="/login"
+            className="mt-6 inline-flex items-center justify-center min-h-10 px-5 rounded-[10px] bg-steel border border-silver/60 text-white text-sm font-medium hover:border-silver transition-colors"
+          >
+            Go to login
+          </RouterLink>
+        </div>
+      </div>
+    )
   }
 
   return (
