@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#060607"/>
   <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#1C1E22" stroke-width="2"/>
-  <line x1="100" y1="200" x2="320" y2="200" stroke="#C7CBD1" stroke-width="1" opacity="0.6"/>
-  <text x="100" y="180" font-family="'JetBrains Mono',monospace" font-size="22" letter-spacing="4" fill="#C7CBD1">@CREATIVEEAZY</text>
-  <text x="100" y="310" font-family="'Inter Tight','Inter',sans-serif" font-weight="600" font-size="88" letter-spacing="-2" fill="#EDEFF2">ANIEKAN ISRAEL</text>
-  <text x="100" y="380" font-family="'JetBrains Mono',monospace" font-size="24" letter-spacing="4" fill="#8A8F98">LIGHT TO THE WORLD · MASSIVE EXECUTION</text>
-  <text x="100" y="500" font-family="'Inter',sans-serif" font-size="28" fill="#8A8F98">Everything I'm building — products, ventures, books.</text>
+  <text x="100" y="180" font-family="'JetBrains Mono',monospace" font-size="22" letter-spacing="4" fill="#C7CBD1">ONE LINK FOR EVERYTHING YOU DO</text>
+  <text x="100" y="320" font-family="'Inter Tight','Inter',sans-serif" font-weight="600" font-size="110" letter-spacing="-3" fill="#EDEFF2">Link it all.</text>
+  <text x="100" y="400" font-family="'Inter',sans-serif" font-size="30" fill="#8A8F98">Everything you make, sell, and stand for — in one link worth sharing.</text>
+  <line x1="100" y1="470" x2="420" y2="470" stroke="#C7CBD1" stroke-width="1" opacity="0.6"/>
+  <text x="100" y="520" font-family="'JetBrains Mono',monospace" font-size="24" letter-spacing="4" fill="#C7CBD1">LYNKIT.LINK</text>
 </svg>

@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Link, LinkInput } from '../lib/types'
+import { validateLinkUrl } from '../lib/validation'
 import { CloseIcon } from '../components/icons'
-import { FieldLabel, Toggle, btnPrimary, btnSecondary, inputClass, isValidUrl } from './ui'
+import { FieldLabel, Toggle, btnPrimary, btnSecondary, inputClass } from '../admin/ui'
 
 interface Props {
   link: Link | null // null = create new
+  userId: string
   nextSortOrder: number
   onSave: (input: LinkInput, id?: string) => Promise<void>
   onClose: () => void
 }
 
-export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
+export function LinkEditor({ link, userId, nextSortOrder, onSave, onClose }: Props) {
   const [title, setTitle] = useState(link?.title ?? '')
   const [category, setCategory] = useState(link?.category ?? '')
   const [subtitle, setSubtitle] = useState(link?.subtitle ?? '')
@@ -26,8 +28,9 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!isValidUrl(url.trim())) {
-      setUrlError('URL must start with http:// or https:// and be valid.')
+    const err = validateLinkUrl(url)
+    if (err) {
+      setUrlError(err)
       return
     }
     setUrlError(null)
@@ -35,6 +38,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
     try {
       await onSave(
         {
+          user_id: userId,
           title: title.trim(),
           category: category.trim() || null,
           subtitle: subtitle.trim() || null,
@@ -77,9 +81,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
         </button>
 
         <p className="mono-label">{link ? 'Edit link' : 'Add link'}</p>
-        <h2 className="display text-platinum text-lg mt-1 mb-5">
-          {link ? link.title : 'New link'}
-        </h2>
+        <h2 className="display text-platinum text-lg mt-1 mb-5">{link ? link.title : 'New link'}</h2>
 
         <div className="flex flex-col gap-4">
           <label>
@@ -89,7 +91,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputClass}
-              placeholder="SkryveAI"
+              placeholder="My Store"
             />
           </label>
 
@@ -100,7 +102,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className={inputClass}
-                placeholder="AI PLATFORM"
+                placeholder="SHOP"
               />
             </label>
             <label>
@@ -109,7 +111,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
                 value={icon}
                 onChange={(e) => setIcon(e.target.value)}
                 className={inputClass}
-                placeholder="🚀"
+                placeholder="🛍️"
               />
             </label>
           </div>
@@ -133,8 +135,8 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
               className={inputClass + ' resize-y'}
             />
             <span className="block text-mist text-xs mt-1.5 leading-relaxed">
-              If you fill this, tapping the button opens a popup with this text and a
-              Visit-site button. Leave empty to link directly.
+              Fill this and tapping the button opens a popup with a Visit-site button; leave
+              empty to link directly.
             </span>
           </label>
 
@@ -158,7 +160,7 @@ export function LinkEditor({ link, nextSortOrder, onSave, onClose }: Props) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-platinum">
                 Featured
-                <span className="block text-xs text-mist">Spotlight border treatment</span>
+                <span className="block text-xs text-mist">Spotlight treatment in your theme</span>
               </span>
               <Toggle checked={featured} onChange={setFeatured} label="Featured" />
             </div>

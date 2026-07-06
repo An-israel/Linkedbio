@@ -2,14 +2,17 @@ import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { signOut, useAuth } from '../hooks/useAuth'
 
 const NAV = [
-  { to: '/admin', label: 'Links', end: true },
-  { to: '/admin/appearance', label: 'Appearance', end: false },
+  { to: '/admin', label: 'Overview', end: true },
+  { to: '/admin/promotions', label: 'Promotions', end: false },
+  { to: '/admin/users', label: 'Users', end: false },
+  { to: '/admin/moderation', label: 'Moderation', end: false },
   { to: '/admin/analytics', label: 'Analytics', end: false },
+  { to: '/admin/themes', label: 'Themes', end: false },
 ]
 
-/** Guard + shell for all /admin routes. */
+/** Owner-only shell for the platform super-admin. */
 export function AdminLayout() {
-  const { session, isAdmin, loading } = useAuth()
+  const { session, profile, loading } = useAuth()
   const navigate = useNavigate()
 
   if (loading) {
@@ -20,28 +23,31 @@ export function AdminLayout() {
     )
   }
 
-  if (!session || !isAdmin) return <Navigate to="/admin/login" replace />
+  if (!session) return <Navigate to="/login" replace />
+  if (!profile?.is_owner) return <Navigate to="/dashboard" replace />
 
   async function handleLogout() {
     await signOut()
-    navigate('/admin/login', { replace: true })
+    navigate('/login', { replace: true })
   }
 
   return (
     <div className="min-h-dvh bg-obsidian">
       <header className="border-b border-steel">
-        <div className="mx-auto max-w-3xl px-5 h-14 flex items-center justify-between">
-          <NavLink to="/" className="display text-platinum text-sm">
-            AI<span className="text-mist">/</span>ADMIN
+        <div className="mx-auto max-w-4xl px-5 h-14 flex items-center justify-between gap-3">
+          <NavLink to="/dashboard" className="display text-platinum text-sm shrink-0">
+            Lynkit<span className="text-warning">/admin</span>
           </NavLink>
-          <nav className="flex items-center gap-5" aria-label="Admin">
+          <nav className="flex items-center gap-4 overflow-x-auto" aria-label="Admin">
             {NAV.map(({ to, label, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `mono-label transition-colors ${isActive ? '' : 'text-mist hover:text-silver'}`
+                  `mono-label whitespace-nowrap transition-colors ${
+                    isActive ? '' : 'text-mist hover:text-silver'
+                  }`
                 }
               >
                 {label}
@@ -50,7 +56,7 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="mono-label text-mist hover:text-danger transition-colors cursor-pointer"
+              className="mono-label text-mist hover:text-danger transition-colors cursor-pointer whitespace-nowrap"
             >
               Logout
             </button>
@@ -58,7 +64,7 @@ export function AdminLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 py-8">
+      <main className="mx-auto max-w-4xl px-5 py-8">
         <Outlet />
       </main>
     </div>

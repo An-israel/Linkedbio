@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import {
   DndContext,
   KeyboardSensor,
@@ -17,10 +18,11 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { supabase } from '../lib/supabase'
-import type { Link, LinkInput } from '../lib/types'
+import { LINK_CAP } from '../lib/types'
+import type { Link, LinkInput, Profile } from '../lib/types'
 import { DragHandleIcon } from '../components/icons'
 import { LinkEditor } from './LinkEditor'
-import { ConfirmDialog, Toggle, btnPrimary, useToast } from './ui'
+import { ConfirmDialog, Toggle, btnPrimary, useToast } from '../admin/ui'
 
 function SortableRow({
   link,
@@ -68,14 +70,16 @@ function SortableRow({
               featured
             </span>
           )}
+          {link.flagged && (
+            <span className="mono-label text-[10px] border border-danger/60 text-danger rounded px-1.5 py-0.5">
+              flagged
+            </span>
+          )}
         </div>
         <span className="block text-mist text-xs mt-0.5 truncate">{link.url}</span>
       </div>
 
-      <span
-        className="mono-label text-mist shrink-0 hidden sm:block"
-        title={`${link.click_count} clicks`}
-      >
+      <span className="mono-label text-mist shrink-0 hidden sm:block">
         {link.click_count} clicks
       </span>
 
@@ -103,7 +107,8 @@ function SortableRow({
   )
 }
 
-export function LinksManager() {
+export function MyLinks() {
+  const { profile } = useOutletContext<{ profile: Profile }>()
   const toast = useToast()
   const [links, setLinks] = useState<Link[]>([])
   const [loading, setLoading] = useState(true)
@@ -116,11 +121,7 @@ export function LinksManager() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  useEffect(() => {
-    void loadLinks()
-  }, [])
-
-  async function loadLinks() {
+  const loadLinks = useCallback(async () => {
     if (!supabase) {
       setLoading(false)
       return
@@ -128,14 +129,16 @@ export function LinksManager() {
     const { data, error } = await supabase
       .from('links')
       .select('*')
-      .order('sort_order', { ascending: true })
-    if (error) {
-      toast('Failed to load links: ' + error.message, 'danger')
-    } else {
-      setLinks((data as Link[]) ?? [])
-    }
+      .eq('user_id', profile.id)
+      .order('sort_order')
+    if (error) toast('Failed to load links: ' + error.message, 'danger')
+    else setLinks((data as Link[]) ?? [])
     setLoading(false)
-  }
+  }, [profile.id, toast])
+
+  useEffect(() => {
+    void loadLinks()
+  }, [loadLinks])
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -161,7 +164,7 @@ export function LinksManager() {
   }
 
   async function handleToggleVisible(link: Link, visible: boolean) {
-    setLinks((ls) => ls.map((l) => (l.id === link.id ? { ...l, visible } : l))) // optimistic
+    setLinks((ls) => ls.map((l) => (l.id === link.id ? { ...l, visible } : l)))
     if (!supabase) return
     const { error } = await supabase.from('links').update({ visible }).eq('id', link.id)
     if (error) {
@@ -172,14 +175,11 @@ export function LinksManager() {
 
   async function handleSave(input: LinkInput, id?: string) {
     if (!supabase) {
-      toast('Supabase is not configured', 'danger')
+      toast('Backend not configured', 'danger')
       return
     }
     if (id) {
-      const { error } = await supabase
-        .from('links')
-        .update({ ...input, updated_at: new Date().toISOString() })
-        .eq('id', id)
+      const { error } = await supabase.from('links').update(input).eq('id', id)
       if (error) {
         toast('Save failed: ' + error.message, 'danger')
         return
@@ -205,7 +205,7 @@ export function LinksManager() {
     }
     const target = deleting
     setDeleting(null)
-    setLinks((ls) => ls.filter((l) => l.id !== target.id)) // optimistic
+    setLinks((ls) => ls.filter((l) => l.id !== target.id))
     const { error } = await supabase.from('links').delete().eq('id', target.id)
     if (error) {
       toast('Delete failed: ' + error.message, 'danger')
@@ -215,14 +215,27 @@ export function LinksManager() {
     }
   }
 
+  const atCap = links.length >= LINK_CAP
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <p className="mono-label">Links</p>
-          <h1 className="display text-platinum text-xl mt-1">Manage your stack</h1>
+          <p className="mono-label">My Links</p>
+          <h1 className="display text-platinum text-xl mt-1">
+            lynkit.link/{profile.username}
+          </h1>
+          <p className="text-mist text-xs mt-1">
+            {links.length} / {LINK_CAP} links
+          </p>
         </div>
-        <button type="button" onClick={() => setCreating(true)} className={btnPrimary}>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          disabled={atCap}
+          className={btnPrimary}
+          title={atCap ? `Limit of ${LINK_CAP} links reached` : undefined}
+        >
           Add link
         </button>
       </div>
@@ -236,7 +249,7 @@ export function LinksManager() {
       ) : links.length === 0 ? (
         <div className="border border-steel border-dashed rounded-[10px] p-10 text-center">
           <p className="text-mist text-sm">
-            No links yet. Add your first link — it appears on the public page instantly.
+            No links yet. Add your first link — it appears on your public page instantly.
           </p>
         </div>
       ) : (
@@ -260,6 +273,7 @@ export function LinksManager() {
       {(creating || editing) && (
         <LinkEditor
           link={editing}
+          userId={profile.id}
           nextSortOrder={links.length}
           onSave={handleSave}
           onClose={() => {
